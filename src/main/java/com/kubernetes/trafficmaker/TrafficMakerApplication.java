@@ -8,8 +8,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 public class TrafficMakerApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(TrafficMakerApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(TrafficMakerApplication.class, args);
+    }
 
 }

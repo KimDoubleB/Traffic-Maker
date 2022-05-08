@@ -17,7 +17,7 @@ public class TrafficScheduler {
     private final TaskScheduler taskScheduler;
 
     public void add(String taskName, Runnable task, Duration period) {
-        var  scheduledFuture = taskScheduler.scheduleAtFixedRate(task, period);
+        var scheduledFuture = taskScheduler.scheduleAtFixedRate(task, period);
         tasks.put(taskName, scheduledFuture);
     }
 
