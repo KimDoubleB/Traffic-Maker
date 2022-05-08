@@ -28,6 +28,7 @@ dependencies {
 
 	implementation "io.javaoperatorsdk:operator-framework:${javaOperatorVersion}"
 	annotationProcessor "io.javaoperatorsdk:operator-framework:${javaOperatorVersion}"
+	annotationProcessor "io.fabric8:crd-generator-apt:5.12.2"
 
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
