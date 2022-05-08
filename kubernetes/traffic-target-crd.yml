@@ -22,11 +22,6 @@ spec:
               rate:
                 type: string
             type: object
-          status:
-            properties:
-              requestCount:
-                type: string
-            type: object
         type: object
     served: true
     storage: true
