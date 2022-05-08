@@ -4,5 +4,5 @@ kind: TrafficTarget
 metadata:
   name: traffic-target-sample
 spec:
-  targetUri: "uri"
-  rate: "rate"
+  targetUri: "https://some-uri"
+  rate: "1m"
