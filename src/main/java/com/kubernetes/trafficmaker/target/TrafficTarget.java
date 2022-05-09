@@ -18,7 +18,7 @@ public class TrafficTarget
 
     public Runnable requestToTargetTask(WebClient webClient, URI targetUri) {
         return () -> {
-            log.debug("Request to target {}", targetUri);
+            log.debug("Request to target {} by thread {}", targetUri, Thread.currentThread().getId());
             webClient.get()
                     .uri(targetUri)
                     .retrieve()
