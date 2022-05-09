@@ -27,12 +27,7 @@ public class TrafficMakerReconciler implements Reconciler<TrafficTarget> {
     @Override
     public UpdateControl<TrafficTarget> reconcile(TrafficTarget trafficTarget, Context context) {
         log.debug("Reconcile by trafficTarget {}", trafficTarget);
-
-        var resourceName = trafficTarget.getMetadata().getName();
-        var targetUri = URI.create(trafficTarget.getSpec().targetUri());
-        var task = trafficTarget.requestToTargetTask(webClient, targetUri);
-        var period = DurationStyle.detectAndParse(trafficTarget.getSpec().rate());
-        trafficScheduler.addFixedRateSchedule(resourceName, task, period);
+        scheduleTask(trafficTarget);
         return UpdateControl.updateStatus(trafficTarget);
     }
 
@@ -43,6 +38,16 @@ public class TrafficMakerReconciler implements Reconciler<TrafficTarget> {
         var resourceName = trafficTarget.getMetadata().getName();
         trafficScheduler.remove(resourceName);
         return DeleteControl.defaultDelete();
+    }
+
+    private void scheduleTask(TrafficTarget trafficTarget) {
+        var resourceName = trafficTarget.getMetadata().getName();
+        var targetUri = URI.create(trafficTarget.getSpec().targetUri());
+        var task = trafficTarget.requestToTargetTask(webClient, targetUri);
+        var period = DurationStyle.detectAndParse(trafficTarget.getSpec().rate());
+
+        var isTaskScheduled = trafficScheduler.addFixedRateSchedule(resourceName, task, period);
+        trafficTarget.updateTrafficTaskStatus(isTaskScheduled);
     }
 
 }
