@@ -9,6 +9,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.net.URI;
 
+import static com.kubernetes.trafficmaker.target.TrafficTargetStatus.Status.FAILURE;
+import static com.kubernetes.trafficmaker.target.TrafficTargetStatus.Status.SCHEDULING;
+
 @Group("bb.traffic-maker.com")
 @Version("v1alpha1")
 @Slf4j
@@ -25,6 +28,14 @@ public class TrafficTarget
                     .toBodilessEntity()
                     .subscribe();
         };
+    }
+
+    public void updateTrafficTaskStatus(boolean isTaskScheduled) {
+        if (isTaskScheduled) {
+            setStatus(new TrafficTargetStatus(SCHEDULING));
+        } else {
+            setStatus(new TrafficTargetStatus(FAILURE));
+        }
     }
 
 }
