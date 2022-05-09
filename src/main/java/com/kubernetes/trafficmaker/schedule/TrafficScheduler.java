@@ -17,13 +17,21 @@ public class TrafficScheduler {
     private final TaskScheduler taskScheduler;
 
     public void add(String taskName, Runnable task, Duration period) {
-        var scheduledFuture = taskScheduler.scheduleAtFixedRate(task, period);
-        tasks.put(taskName, scheduledFuture);
+        if (isScheduled(taskName)) {
+            throw new AlreadyScheduledException(taskName);
+        }
+
+        tasks.put(taskName, taskScheduler.scheduleAtFixedRate(task, period));
     }
 
     public void remove(String taskName) {
-        tasks.get(taskName).cancel(true);
-        tasks.remove(taskName);
+        if (isScheduled(taskName)) {
+            tasks.remove(taskName).cancel(true);
+        }
+    }
+
+    private boolean isScheduled(String taskName) {
+        return tasks.containsKey(taskName);
     }
 
 }
