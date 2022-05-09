@@ -32,7 +32,7 @@ public class TrafficMakerReconciler implements Reconciler<TrafficTarget> {
         var targetUri = URI.create(trafficTarget.getSpec().targetUri());
         var task = trafficTarget.requestToTargetTask(webClient, targetUri);
         var period = DurationStyle.detectAndParse(trafficTarget.getSpec().rate());
-        trafficScheduler.add(resourceName, task, period);
+        trafficScheduler.addFixedRateSchedule(resourceName, task, period);
         return UpdateControl.updateStatus(trafficTarget);
     }
 

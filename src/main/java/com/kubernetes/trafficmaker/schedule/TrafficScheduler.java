@@ -16,7 +16,7 @@ public class TrafficScheduler {
     private final Map<String, ScheduledFuture<?>> tasks = new ConcurrentHashMap<>();
     private final TaskScheduler taskScheduler;
 
-    public void add(String taskName, Runnable task, Duration period) {
+    public void addFixedRateSchedule(String taskName, Runnable task, Duration period) {
         if (isScheduled(taskName)) {
             throw new AlreadyScheduledException(taskName);
         }
