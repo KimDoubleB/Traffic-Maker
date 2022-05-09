@@ -8,6 +8,8 @@ spec:
     kind: TrafficTarget
     plural: traffictargets
     singular: traffictarget
+    shortNames:
+      - tt
   scope: Namespaced
   versions:
   - name: v1alpha1
@@ -21,7 +23,28 @@ spec:
               rate:
                 type: string
             type: object
+          status:
+            properties:
+              status:
+                enum:
+                  - SCHEDULING
+                  - FAILURE
+                type: string
+            type: object
         type: object
+    additionalPrinterColumns:
+      - name: Target URI
+        type: string
+        description: Target URI value
+        jsonPath: .spec.targetUri
+      - name: Rate
+        type: string
+        description: Scheduling rate
+        jsonPath: .spec.rate
+      - name: Status
+        type: string
+        description: TrafficTarget current status
+        jsonPath: .status.status
     served: true
     storage: true
     subresources:
