@@ -34,7 +34,7 @@ public class TrafficScheduler {
         }
     }
 
-    private boolean isScheduled(String taskName) {
+    public boolean isScheduled(String taskName) {
         return tasks.containsKey(taskName);
     }
 
