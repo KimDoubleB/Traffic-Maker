@@ -1,0 +1,18 @@
+apiVersion: skaffold/v2beta25
+kind: Config
+metadata:
+  name: traffic-maker
+build:
+  tagPolicy:
+    sha256: { }
+  artifacts:
+    - image: traffic-maker
+      context: .
+      buildpacks:
+        builder: paketobuildpacks/builder:base
+        env:
+          - BP_JVM_VERSION=17
+deploy:
+  kubectl:
+    manifests: ["./kubernetes/traffic-target-crd.yml",
+                "./kubernetes/cloudcode/**.yml"]

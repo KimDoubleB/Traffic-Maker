@@ -1,0 +1,40 @@
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: test-ns
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: java-echo-hello
+  namespace: test-ns
+  labels:
+    app: java-echo-hello
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: java-echo-hello
+  template:
+    metadata:
+      labels:
+        app: java-echo-hello
+    spec:
+      containers:
+        - name: java-echo-hello
+          image: tree9295/echo-java:1.0.0
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: java-echo-hello-svc
+  namespace: test-ns
+spec:
+  selector:
+    app: java-echo-hello
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080

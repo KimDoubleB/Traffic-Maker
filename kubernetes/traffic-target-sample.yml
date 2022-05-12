@@ -3,5 +3,5 @@ kind: TrafficTarget
 metadata:
   name: traffic-target-sample
 spec:
-  targetUri: "https://some-uri"
-  rate: "1m"
+  targetUri: "java-echo-hello-svc.test-ns.svc.cluster.local:8080/"
+  rate: "30s"

@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: traffic-maker
+  namespace: traffic-maker
+  labels:
+    app: traffic-maker
+spec:
+  selector:
+    matchLabels:
+      app: traffic-maker
+  template:
+    metadata:
+      labels:
+        app: traffic-maker
+    spec:
+      serviceAccountName: traffic-maker-service-account
+      containers:
+      - name: traffic-maker
+        image: traffic-maker
+        ports:
+        - containerPort: 8080
