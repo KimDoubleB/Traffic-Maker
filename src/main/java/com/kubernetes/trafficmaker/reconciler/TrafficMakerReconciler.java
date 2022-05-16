@@ -42,8 +42,8 @@ public class TrafficMakerReconciler implements Reconciler<TrafficTarget> {
 
     private void scheduleTask(TrafficTarget trafficTarget) {
         var resourceName = trafficTarget.getMetadata().getName();
-        var targetUri = URI.create(trafficTarget.getSpec().targetUri());
-        var task = trafficTarget.requestToTargetTask(webClient, targetUri);
+        var httpTargetSpec = trafficTarget.getSpec().http();
+        var task = httpTargetSpec.toTask(webClient);
         var period = DurationStyle.detectAndParse(trafficTarget.getSpec().rate());
 
         var isTaskScheduled = trafficScheduler.addFixedRateSchedule(resourceName, task, period);
