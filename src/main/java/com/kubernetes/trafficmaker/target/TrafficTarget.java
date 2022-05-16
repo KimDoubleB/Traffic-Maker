@@ -5,9 +5,6 @@ import io.fabric8.kubernetes.client.CustomResource;
 import io.fabric8.kubernetes.model.annotation.Group;
 import io.fabric8.kubernetes.model.annotation.Version;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.reactive.function.client.WebClient;
-
-import java.net.URI;
 
 import static com.kubernetes.trafficmaker.target.TrafficTargetStatus.Status.FAILURE;
 import static com.kubernetes.trafficmaker.target.TrafficTargetStatus.Status.SCHEDULING;
@@ -18,17 +15,6 @@ import static com.kubernetes.trafficmaker.target.TrafficTargetStatus.Status.SCHE
 public class TrafficTarget
         extends CustomResource<TrafficTargetSpec, TrafficTargetStatus>
         implements Namespaced {
-
-    public Runnable requestToTargetTask(WebClient webClient, URI targetUri) {
-        return () -> {
-            log.debug("Request to target {} by thread {}", targetUri, Thread.currentThread().getId());
-            webClient.get()
-                    .uri(targetUri)
-                    .retrieve()
-                    .toBodilessEntity()
-                    .subscribe();
-        };
-    }
 
     public void updateTrafficTaskStatus(boolean isTaskScheduled) {
         if (isTaskScheduled) {
