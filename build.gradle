@@ -35,6 +35,9 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'io.projectreactor:reactor-test'
+
+	implementation 'org.mock-server:mockserver-client-java:5.13.2'
+	testImplementation 'org.mock-server:mockserver-netty:5.13.2'
 }
 
 tasks.named('test') {

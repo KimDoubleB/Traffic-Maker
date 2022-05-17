@@ -3,5 +3,12 @@ kind: TrafficTarget
 metadata:
   name: traffic-target-sample
 spec:
-  targetUri: "java-echo-hello-svc.test-ns.svc.cluster.local:8080/"
+  http:
+    timeoutSeconds: 10
+    headers:
+      HEADER-SAMPLE: "header-value"
+      HEADER-SAMPLE2: "header-value2"
+    body: "{\"message\": \"Hello, World!\"}"
+    method: POST
+    uri: "localhost:8081"
   rate: "30s"

@@ -18,8 +18,21 @@ spec:
         properties:
           spec:
             properties:
-              targetUri:
-                type: string
+              http:
+                properties:
+                  timeoutSeconds:
+                    type: integer
+                  uri:
+                    type: string
+                  headers:
+                    additionalProperties:
+                      type: string
+                    type: object
+                  body:
+                    type: string
+                  method:
+                    type: string
+                type: object
               rate:
                 type: string
             type: object
@@ -36,7 +49,7 @@ spec:
       - name: Target URI
         type: string
         description: Target URI value
-        jsonPath: .spec.targetUri
+        jsonPath: .spec.http.uri
       - name: Rate
         type: string
         description: Scheduling rate

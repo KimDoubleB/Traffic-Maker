@@ -23,6 +23,7 @@ spec:
       containers:
         - name: java-echo-hello
           image: tree9295/echo-java:1.0.0
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
 ---

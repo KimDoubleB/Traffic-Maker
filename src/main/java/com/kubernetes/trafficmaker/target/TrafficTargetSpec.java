@@ -1,4 +1,4 @@
 package com.kubernetes.trafficmaker.target;
 
-public record TrafficTargetSpec(String targetUri, String rate) {
+public record TrafficTargetSpec(HttpTargetSpec http, String rate) {
 }

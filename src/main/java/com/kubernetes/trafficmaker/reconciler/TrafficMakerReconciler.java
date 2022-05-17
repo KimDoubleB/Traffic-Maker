@@ -13,8 +13,6 @@ import org.springframework.boot.convert.DurationStyle;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import java.net.URI;
-
 @ControllerConfiguration
 @Component
 @RequiredArgsConstructor
@@ -40,13 +38,13 @@ public class TrafficMakerReconciler implements Reconciler<TrafficTarget> {
         return DeleteControl.defaultDelete();
     }
 
+    @SuppressWarnings("ReactiveStreamsUnusedPublisher")
     private void scheduleTask(TrafficTarget trafficTarget) {
         var resourceName = trafficTarget.getMetadata().getName();
-        var targetUri = URI.create(trafficTarget.getSpec().targetUri());
-        var task = trafficTarget.requestToTargetTask(webClient, targetUri);
+        var httpTargetSpec = trafficTarget.getSpec().http();
+        var httpRequestMono = httpTargetSpec.toRequestMono(webClient);
         var period = DurationStyle.detectAndParse(trafficTarget.getSpec().rate());
-
-        var isTaskScheduled = trafficScheduler.addFixedRateSchedule(resourceName, task, period);
+        var isTaskScheduled = trafficScheduler.addFixedRateSchedule(resourceName, httpRequestMono::subscribe, period);
         trafficTarget.updateTrafficTaskStatus(isTaskScheduled);
     }
 
