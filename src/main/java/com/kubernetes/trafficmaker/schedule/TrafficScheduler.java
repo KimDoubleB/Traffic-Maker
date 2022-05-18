@@ -30,9 +30,10 @@ public class TrafficScheduler {
     }
 
     public void removeSchedule(String taskName) {
-        if (isScheduledTask(taskName)) {
-            tasks.remove(taskName).cancel(true);
-        }
+        tasks.computeIfPresent(taskName, (t, schedule) -> {
+            schedule.cancel(true);
+            return tasks.remove(t);
+        });
     }
 
     public boolean isScheduledTask(String taskName) {
