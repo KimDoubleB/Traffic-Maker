@@ -42,6 +42,7 @@ spec:
                 enum:
                   - SCHEDULING
                   - FAILURE
+                  - UPDATING
                 type: string
             type: object
         type: object
