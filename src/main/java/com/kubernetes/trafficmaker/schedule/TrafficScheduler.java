@@ -18,12 +18,7 @@ public class TrafficScheduler {
     private final Map<String, ScheduledFuture<?>> tasks = new ConcurrentHashMap<>();
     private final TaskScheduler taskScheduler;
 
-    public boolean addFixedRateSchedule(String taskName, Runnable task, Duration period) {
-        if (isScheduled(taskName)) {
-            log.warn("Task {} is already scheduled.", taskName);
-            return false;
-        }
-
+    public void addFixedRateSchedule(String taskName, Runnable task, Duration period) {
         tasks.put(taskName, taskScheduler.scheduleAtFixedRate(task, period));
         return true;
     }
