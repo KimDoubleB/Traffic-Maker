@@ -42,7 +42,11 @@ public class TrafficMakerReconciler implements Reconciler<TrafficTarget> {
         }
 
         if (TrafficTargetStatus.isScheduledStatus(trafficTarget.getStatus())) {
-            trafficScheduler.updateFixedRateSchedule(taskName, httpRequestMono::subscribe, period);
+            if (trafficScheduler.isScheduledTask(taskName)) {
+                trafficScheduler.updateFixedRateSchedule(taskName, httpRequestMono::subscribe, period);
+            } else {
+                trafficScheduler.addFixedRateSchedule(taskName, httpRequestMono::subscribe, period);
+            }
             return UpdateControl.noUpdate();
         }
 
