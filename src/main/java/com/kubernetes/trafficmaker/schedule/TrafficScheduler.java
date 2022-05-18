@@ -20,7 +20,13 @@ public class TrafficScheduler {
 
     public void addFixedRateSchedule(String taskName, Runnable task, Duration period) {
         tasks.put(taskName, taskScheduler.scheduleAtFixedRate(task, period));
-        return true;
+    }
+
+    public void updateFixedRateSchedule(String taskName, Runnable task, Duration period) {
+        tasks.computeIfPresent(taskName, (t, schedule) -> {
+            schedule.cancel(true);
+            return taskScheduler.scheduleAtFixedRate(task, period);
+        });
     }
 
     public void remove(String taskName) {
