@@ -13,13 +13,17 @@ import java.util.concurrent.ScheduledFuture;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+@SuppressWarnings("unchecked")
 @ExtendWith(MockitoExtension.class)
 class TrafficSchedulerTest {
 
     static final String INIT_TASK_NAME = "TASK_NAME";
-    static final Runnable INIT_TASK = () -> {};
+    static final Runnable INIT_TASK = () -> {
+    };
     static final Duration INIT_TASK_PERIOD = Duration.ofDays(1L);
 
     @Mock
@@ -40,43 +44,70 @@ class TrafficSchedulerTest {
         trafficScheduler.addFixedRateSchedule(INIT_TASK_NAME, INIT_TASK, INIT_TASK_PERIOD);
     }
 
-    @DisplayName("task가 등록되지 않았던 경우, addFixedRateSchedule 메서드는 task를 등록하고 true를 반환한다")
+    @DisplayName("등록되지 않은 task가 schedule 되면, task에 정상적으로 등록된다")
     @Test
-    void return_true_addFixedRateSchedule() {
+    void addFixedRateScheduleTest_when_not_scheduled_task() {
         // given
         var newTaskName = "TASK_NAME2";
 
         // when
-        var isTaskScheduled = trafficScheduler.addFixedRateSchedule(newTaskName, INIT_TASK, INIT_TASK_PERIOD);
+        trafficScheduler.addFixedRateSchedule(newTaskName, INIT_TASK, INIT_TASK_PERIOD);
 
         // then
-        assertThat(isTaskScheduled).isTrue();
-        assertThat(trafficScheduler.isScheduled(newTaskName)).isTrue();
+        assertThat(trafficScheduler.isScheduledTask(newTaskName)).isTrue();
     }
 
-    @DisplayName("중복된 이름의 Task가 들어오는 경우, addFixedRateSchedule는 false를 반환한다")
+    @DisplayName("task 업데이트 시, 같은 이름의 이미 존재하는 schedule task가 있으면 cancel하고 새로 등록한다")
     @Test
-    void return_false_addFixedRateSchedule() {
+    void updateFixedRateScheduleTest_cancel_existed_schedule_task_and_register_new_schedule_task() {
         // given
-        var duplicatedTaskName = "TASK_NAME";
+        var alreadyScheduledTaskName = INIT_TASK_NAME;
+        var newPeriod = Duration.ofMinutes(1L);
+        Runnable newTask = () -> System.out.println("new TASK");
+        var newScheduledFuture = mock(ScheduledFuture.class);
+
+        given(scheduledFuture.cancel(true)).willReturn(true);
+        given(taskScheduler.scheduleAtFixedRate(newTask, newPeriod))
+                .willReturn(newScheduledFuture);
 
         // when
-        var isTaskScheduled = trafficScheduler.addFixedRateSchedule(duplicatedTaskName, INIT_TASK, INIT_TASK_PERIOD);
+        trafficScheduler.updateFixedRateSchedule(alreadyScheduledTaskName, newTask, newPeriod);
 
         // then
-        assertThat(isTaskScheduled).isFalse();
+        assertThat(trafficScheduler.isScheduledTask(alreadyScheduledTaskName)).isTrue();
+        verify(scheduledFuture).cancel(true);
+        verify(taskScheduler).scheduleAtFixedRate(newTask, newPeriod);
     }
 
-    @DisplayName("등록되어져 있는 Task를 remove하면 해당 Task의 ScheduleFuture cancel 메서드가 호출된다")
+    @DisplayName("task 업데이트 시, 같은 이름의 schedule task가 없으면 아무것도 하지 않는다")
     @Test
-    void remove_call_cancel() {
+    void updateFixedRateScheduleTest_nothing_when_not_existed_same_task_name() {
         // given
+        var newTaskName = "new task name";
+        var newPeriod = Duration.ofMinutes(1L);
+        Runnable newTask = () -> System.out.println("new TASK");
+
+        // when
+        trafficScheduler.updateFixedRateSchedule(newTaskName, newTask, newPeriod);
+
+        // then
+        assertThat(trafficScheduler.isScheduledTask(newTaskName)).isFalse();
+        verify(scheduledFuture, never()).cancel(true);
+        verify(taskScheduler, never()).scheduleAtFixedRate(newTask, newPeriod);
+    }
+
+    @DisplayName("task 제거 시, task name에 해당하는 schedule task가 있다면 종료하고 제거한다")
+    @Test
+    void removeSchedule_task_stop_and_remove_task() {
+        // given
+        var alreadyScheduledTaskName = INIT_TASK_NAME;
         given(scheduledFuture.cancel(true)).willReturn(true);
 
         // when
-        trafficScheduler.remove(INIT_TASK_NAME);
+        trafficScheduler.removeSchedule(alreadyScheduledTaskName);
 
         // then
+        assertThat(trafficScheduler.isScheduledTask(alreadyScheduledTaskName)).isFalse();
         verify(scheduledFuture).cancel(true);
     }
 
