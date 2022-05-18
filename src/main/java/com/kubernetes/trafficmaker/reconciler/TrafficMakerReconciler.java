@@ -15,6 +15,8 @@ import org.springframework.boot.convert.DurationStyle;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.util.concurrent.TimeUnit;
+
 @ControllerConfiguration
 @Component
 @RequiredArgsConstructor
@@ -33,6 +35,11 @@ public class TrafficMakerReconciler implements Reconciler<TrafficTarget> {
         var httpTargetSpec = trafficTarget.getSpec().http();
         var httpRequestMono = httpTargetSpec.toRequestMono(webClient);
         var period = DurationStyle.detectAndParse(trafficTarget.getSpec().rate());
+
+        if (TrafficTargetStatus.isFailureStatus(trafficTarget.getStatus())) {
+            trafficTarget.updateTrafficTaskStatus(Status.UPDATING);
+            return UpdateControl.updateStatus(trafficTarget).rescheduleAfter(5, TimeUnit.SECONDS);
+        }
 
         if (TrafficTargetStatus.isScheduledStatus(trafficTarget.getStatus())) {
             trafficScheduler.updateFixedRateSchedule(taskName, httpRequestMono::subscribe, period);
