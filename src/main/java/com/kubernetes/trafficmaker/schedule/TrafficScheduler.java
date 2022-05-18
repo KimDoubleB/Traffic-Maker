@@ -29,13 +29,13 @@ public class TrafficScheduler {
         });
     }
 
-    public void remove(String taskName) {
-        if (isScheduled(taskName)) {
+    public void removeSchedule(String taskName) {
+        if (isScheduledTask(taskName)) {
             tasks.remove(taskName).cancel(true);
         }
     }
 
-    public boolean isScheduled(String taskName) {
+    public boolean isScheduledTask(String taskName) {
         return tasks.containsKey(taskName);
     }
 

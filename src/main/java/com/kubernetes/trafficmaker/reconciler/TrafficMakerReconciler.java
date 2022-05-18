@@ -34,7 +34,7 @@ public class TrafficMakerReconciler implements Reconciler<TrafficTarget> {
         log.debug("Cleanup by trafficTarget {}", trafficTarget);
 
         var resourceName = trafficTarget.getMetadata().getName();
-        trafficScheduler.remove(resourceName);
+        trafficScheduler.removeSchedule(resourceName);
         return DeleteControl.defaultDelete();
     }
 
