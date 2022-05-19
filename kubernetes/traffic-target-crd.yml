@@ -43,6 +43,7 @@ spec:
                   - SCHEDULING
                   - FAILURE
                   - UPDATING
+                  - INITIALIZING
                 type: string
             type: object
         type: object

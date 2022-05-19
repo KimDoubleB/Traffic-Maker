@@ -16,6 +16,7 @@ public record TrafficTargetStatus(Status status) {
         SCHEDULING,
         FAILURE,
         UPDATING,
+        INITIALIZING,
     }
 
 }
