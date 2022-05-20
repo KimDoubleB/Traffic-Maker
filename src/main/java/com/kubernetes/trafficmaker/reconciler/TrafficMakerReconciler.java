@@ -2,7 +2,6 @@ package com.kubernetes.trafficmaker.reconciler;
 
 import com.kubernetes.trafficmaker.schedule.TrafficScheduler;
 import com.kubernetes.trafficmaker.target.TrafficTarget;
-import com.kubernetes.trafficmaker.target.TrafficTargetStatus;
 import com.kubernetes.trafficmaker.target.TrafficTargetStatus.Status;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.javaoperatorsdk.operator.api.reconciler.ControllerConfiguration;
