@@ -18,23 +18,25 @@ public class TrafficScheduler {
     private final Map<String, ScheduledFuture<?>> tasks = new ConcurrentHashMap<>();
     private final TaskScheduler taskScheduler;
 
-    public boolean addFixedRateSchedule(String taskName, Runnable task, Duration period) {
-        if (isScheduled(taskName)) {
-            log.warn("Task {} is already scheduled.", taskName);
-            return false;
-        }
-
+    public void addFixedRateSchedule(String taskName, Runnable task, Duration period) {
         tasks.put(taskName, taskScheduler.scheduleAtFixedRate(task, period));
-        return true;
     }
 
-    public void remove(String taskName) {
-        if (isScheduled(taskName)) {
-            tasks.remove(taskName).cancel(true);
-        }
+    public void updateFixedRateSchedule(String taskName, Runnable task, Duration period) {
+        tasks.computeIfPresent(taskName, (t, schedule) -> {
+            schedule.cancel(true);
+            return taskScheduler.scheduleAtFixedRate(task, period);
+        });
     }
 
-    public boolean isScheduled(String taskName) {
+    public void removeSchedule(String taskName) {
+        tasks.computeIfPresent(taskName, (t, schedule) -> {
+            schedule.cancel(true);
+            return tasks.remove(t);
+        });
+    }
+
+    public boolean isScheduledTask(String taskName) {
         return tasks.containsKey(taskName);
     }
 
