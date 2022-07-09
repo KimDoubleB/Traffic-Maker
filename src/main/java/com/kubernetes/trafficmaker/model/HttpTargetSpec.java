@@ -1,4 +1,4 @@
-package com.kubernetes.trafficmaker.target;
+package com.kubernetes.trafficmaker.model;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpMethod;

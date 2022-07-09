@@ -1,5 +1,6 @@
-package com.kubernetes.trafficmaker.target;
+package com.kubernetes.trafficmaker.model.cron;
 
+import com.kubernetes.trafficmaker.model.HttpTargetSpec;
 import org.springframework.scheduling.support.CronTrigger;
 
 import java.time.ZoneId;

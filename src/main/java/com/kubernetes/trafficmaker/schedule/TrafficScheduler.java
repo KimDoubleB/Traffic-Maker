@@ -1,7 +1,7 @@
 package com.kubernetes.trafficmaker.schedule;
 
-import com.kubernetes.trafficmaker.target.HttpTargetSpec;
-import com.kubernetes.trafficmaker.target.TrafficTargetStatus.State;
+import com.kubernetes.trafficmaker.model.HttpTargetSpec;
+import com.kubernetes.trafficmaker.model.TrafficTargetStatus.State;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.TaskScheduler;

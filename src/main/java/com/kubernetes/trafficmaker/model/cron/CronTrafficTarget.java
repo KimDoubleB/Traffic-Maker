@@ -1,5 +1,6 @@
-package com.kubernetes.trafficmaker.target;
+package com.kubernetes.trafficmaker.model.cron;
 
+import com.kubernetes.trafficmaker.model.TrafficTargetStatus;
 import io.fabric8.kubernetes.api.model.Namespaced;
 import io.fabric8.kubernetes.client.CustomResource;
 import io.fabric8.kubernetes.model.annotation.Group;
@@ -9,8 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 @Group("bb.com")
 @Version("v1alpha1")
 @Slf4j
-public class RateTrafficTarget
-    extends CustomResource<RateTrafficTargetSpec, TrafficTargetStatus>
+public class CronTrafficTarget
+    extends CustomResource<CronTrafficTargetSpec, TrafficTargetStatus>
     implements Namespaced {
 
     public void updateTrafficTargetState(TrafficTargetStatus.State state) {
