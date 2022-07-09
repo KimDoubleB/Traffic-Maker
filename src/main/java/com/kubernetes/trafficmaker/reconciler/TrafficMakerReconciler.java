@@ -75,7 +75,7 @@ public class TrafficMakerReconciler implements Reconciler<TrafficTarget> {
         var period = DurationStyle.detectAndParse(trafficTarget.getSpec().rate());
 
         if (trafficScheduler.isScheduledTask(taskName)) {
-            log.warn("Task {} is already scheduled task.", taskName);
+            log.error("Task {} is already scheduled task.", taskName);
             trafficTarget.updateTrafficTaskState(State.FAILURE);
         } else {
             trafficScheduler.addFixedRateSchedule(taskName, httpRequestMono::subscribe, period);
