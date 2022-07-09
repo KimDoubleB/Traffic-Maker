@@ -1,8 +1,8 @@
 package com.kubernetes.trafficmaker.reconciler;
 
+import com.kubernetes.trafficmaker.schedule.TrafficScheduleTask;
 import com.kubernetes.trafficmaker.schedule.TrafficScheduler;
 import com.kubernetes.trafficmaker.target.TrafficTarget;
-import com.kubernetes.trafficmaker.target.TrafficTargetStatus.State;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.javaoperatorsdk.operator.api.reconciler.ControllerConfiguration;
 import io.javaoperatorsdk.operator.api.reconciler.DeleteControl;
@@ -10,11 +10,9 @@ import io.javaoperatorsdk.operator.api.reconciler.Reconciler;
 import io.javaoperatorsdk.operator.api.reconciler.UpdateControl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.convert.DurationStyle;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
-@SuppressWarnings("ReactiveStreamsUnusedPublisher")
 @ControllerConfiguration
 @Component
 @RequiredArgsConstructor
@@ -29,28 +27,12 @@ public class TrafficMakerReconciler implements Reconciler<TrafficTarget> {
         log.debug("Reconcile by trafficTarget {}", trafficTarget);
 
         var taskName = trafficTarget.getMetadata().getName();
-        var httpTargetSpec = trafficTarget.getSpec().http();
-        var httpRequestMono = httpTargetSpec.toRequestMono(webClient);
-        var period = DurationStyle.detectAndParse(trafficTarget.getSpec().rate());
         var currentState = trafficTarget.getStatus() != null
                                    ? trafficTarget.getStatus().state() : null;
 
-        if (currentState == State.SCHEDULING) {
-            if (trafficScheduler.isScheduledTask(taskName)) {
-                trafficScheduler.updateFixedRateSchedule(taskName, httpRequestMono::subscribe, period);
-            } else {
-                trafficScheduler.addFixedRateSchedule(taskName, httpRequestMono::subscribe, period);
-            }
-            return UpdateControl.noUpdate();
-        }
-
-        if (trafficScheduler.isScheduledTask(taskName)) {
-            log.error("Task {} is already scheduled task.", taskName);
-            trafficTarget.updateTrafficTaskState(State.FAILURE);
-        } else {
-            trafficScheduler.addFixedRateSchedule(taskName, httpRequestMono::subscribe, period);
-            trafficTarget.updateTrafficTaskState(State.SCHEDULING);
-        }
+        var updatedState = TrafficScheduleTask.of(taskName, trafficTarget.getSpec(), webClient)
+                                   .register(trafficScheduler, currentState);
+        trafficTarget.updateTrafficTaskState(updatedState);
         return UpdateControl.updateStatus(trafficTarget);
     }
 

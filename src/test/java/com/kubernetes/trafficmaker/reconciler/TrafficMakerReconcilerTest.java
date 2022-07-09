@@ -104,7 +104,6 @@ class TrafficMakerReconcilerTest {
         var updateControl = trafficMakerReconciler.reconcile(trafficTarget, DEFAULT_CONTEXT);
 
         // then
-        assertThat(updateControl.isNoUpdate()).isTrue();
         assertThat(trafficTarget.getStatus().state()).isEqualTo(State.SCHEDULING);
         verify(trafficScheduler).updateFixedRateSchedule(eq(DEFAULT_RESOURCE_NAME), any(), eq(period));
     }
@@ -122,7 +121,6 @@ class TrafficMakerReconcilerTest {
         var updateControl = trafficMakerReconciler.reconcile(trafficTarget, DEFAULT_CONTEXT);
 
         // then
-        assertThat(updateControl.isNoUpdate()).isTrue();
         assertThat(trafficTarget.getStatus().state()).isEqualTo(State.SCHEDULING);
         verify(trafficScheduler).addFixedRateSchedule(eq(DEFAULT_RESOURCE_NAME), any(), eq(period));
     }
