@@ -5,8 +5,8 @@ import com.kubernetes.trafficmaker.model.TrafficTarget;
 import com.kubernetes.trafficmaker.model.TrafficTargetStatus.State;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.Trigger;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -21,7 +21,7 @@ import java.util.concurrent.ScheduledFuture;
 public class TrafficScheduler {
 
     private final Map<String, ScheduledFuture<?>> tasks = new ConcurrentHashMap<>();
-    private final TaskScheduler taskScheduler;
+    private final ThreadPoolTaskScheduler taskScheduler;
     private final WebClient client;
 
     public boolean schedule(TrafficTarget trafficTarget) {
@@ -68,6 +68,12 @@ public class TrafficScheduler {
 
     public boolean isScheduledTask(String taskName) {
         return tasks.containsKey(taskName);
+    }
+
+    public long getActiveScheduleCount() {
+        var taskCount = taskScheduler.getScheduledThreadPoolExecutor().getTaskCount();
+        var completedTaskCount = taskScheduler.getScheduledThreadPoolExecutor().getCompletedTaskCount();
+        return taskCount - completedTaskCount;
     }
 
 }
