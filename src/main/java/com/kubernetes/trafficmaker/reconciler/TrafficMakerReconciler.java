@@ -28,14 +28,14 @@ public class TrafficMakerReconciler implements Reconciler<TrafficTarget> {
     public UpdateControl<TrafficTarget> reconcile(TrafficTarget trafficTarget, Context context) {
         log.debug("Reconcile by trafficTarget {}", trafficTarget);
 
-        var state = trafficTarget.getStatus() != null
-                            ? trafficTarget.getStatus().state() : State.INITIALIZING;
         var taskName = trafficTarget.getMetadata().getName();
         var httpTargetSpec = trafficTarget.getSpec().http();
         var httpRequestMono = httpTargetSpec.toRequestMono(webClient);
         var period = DurationStyle.detectAndParse(trafficTarget.getSpec().rate());
+        var currentState = trafficTarget.getStatus() != null
+                                   ? trafficTarget.getStatus().state() : null;
 
-        if (state == State.SCHEDULING) {
+        if (currentState == State.SCHEDULING) {
             if (trafficScheduler.isScheduledTask(taskName)) {
                 trafficScheduler.updateFixedRateSchedule(taskName, httpRequestMono::subscribe, period);
             } else {
