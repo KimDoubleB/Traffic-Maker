@@ -10,8 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 @Version("v1alpha1")
 @Slf4j
 public class TrafficTarget
-        extends CustomResource<TrafficTargetSpec, TrafficTargetStatus>
-        implements Namespaced {
+    extends CustomResource<TrafficTargetSpec, TrafficTargetStatus>
+    implements Namespaced {
 
     public void updateTrafficTaskState(TrafficTargetStatus.State state) {
         setStatus(new TrafficTargetStatus(state));

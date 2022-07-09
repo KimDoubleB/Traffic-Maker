@@ -21,8 +21,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 @RequiredArgsConstructor
 @Slf4j
 public class TrafficMakerReconciler implements Reconciler<TrafficTarget>,
-                                                       Cleaner<TrafficTarget>,
-                                                       ErrorStatusHandler<TrafficTarget> {
+                                               Cleaner<TrafficTarget>,
+                                               ErrorStatusHandler<TrafficTarget> {
 
     private final WebClient webClient;
     private final TrafficScheduler trafficScheduler;
@@ -33,10 +33,10 @@ public class TrafficMakerReconciler implements Reconciler<TrafficTarget>,
 
         var taskName = trafficTarget.getMetadata().getName();
         var currentState = trafficTarget.getStatus() != null
-                                   ? trafficTarget.getStatus().state() : null;
+                           ? trafficTarget.getStatus().state() : null;
 
         var updatedState = TrafficScheduleTask.of(taskName, trafficTarget.getSpec(), webClient)
-                                   .register(trafficScheduler, currentState);
+                                              .register(trafficScheduler, currentState);
         trafficTarget.updateTrafficTaskState(updatedState);
         return UpdateControl.updateStatus(trafficTarget);
     }

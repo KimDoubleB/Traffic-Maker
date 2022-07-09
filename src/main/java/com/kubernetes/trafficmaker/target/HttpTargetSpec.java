@@ -22,18 +22,18 @@ public record HttpTargetSpec(int timeoutSeconds,
         var targetUri = URI.create(uri);
         var timeout = Duration.ofSeconds(timeoutSeconds);
         return webClient.method(httpMethod)
-                       .uri(targetUri)
-                       .headers(h -> h.setAll(headers))
-                       .bodyValue(body)
-                       .retrieve()
-                       .bodyToMono(String.class)
-                       .timeout(timeout)
-                       .doOnNext(responseLogging());
+                        .uri(targetUri)
+                        .headers(h -> h.setAll(headers))
+                        .bodyValue(body)
+                        .retrieve()
+                        .bodyToMono(String.class)
+                        .timeout(timeout)
+                        .doOnNext(responseLogging());
     }
 
     private Consumer<String> responseLogging() {
         return response -> log.debug("Http task ({}) by thread {} - Response ({})",
-                this, Thread.currentThread().getId(), response);
+                                     this, Thread.currentThread().getId(), response);
     }
 
 }
