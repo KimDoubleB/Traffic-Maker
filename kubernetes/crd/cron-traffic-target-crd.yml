@@ -35,6 +35,8 @@ spec:
                   type: object
                 cron:
                   type: string
+                timezone:
+                  type: string
               required:
                 - cron
                 - http

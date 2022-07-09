@@ -5,7 +5,6 @@ import com.kubernetes.trafficmaker.model.cron.CronTrafficTarget;
 import com.kubernetes.trafficmaker.model.rate.RateTrafficTarget;
 import lombok.Getter;
 import org.springframework.scheduling.Trigger;
-import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.scheduling.support.PeriodicTrigger;
 
 @Getter
@@ -35,7 +34,7 @@ public class TrafficTarget {
     public static TrafficTarget fromCron(CronTrafficTarget cronTrafficTarget) {
         var name = cronTrafficTarget.getMetadata().getName();
         var cronTrafficTargetSpec = cronTrafficTarget.getSpec();
-        var cronTrigger = new CronTrigger(cronTrafficTargetSpec.cron());
+        var cronTrigger = cronTrafficTargetSpec.cronTrigger();
         var state = cronTrafficTarget.getStatus() != null
                     ? cronTrafficTarget.getStatus().state() : null;
         return new TrafficTarget(name, cronTrafficTargetSpec.http(), cronTrigger, state);

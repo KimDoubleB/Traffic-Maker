@@ -12,3 +12,4 @@ spec:
     method: POST
     uri: "localhost:8081"
   cron: "*/10 * * * * *"
+  timezone: "Asia/Seoul"
