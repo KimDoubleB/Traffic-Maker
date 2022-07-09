@@ -6,7 +6,7 @@ import io.fabric8.kubernetes.model.annotation.Group;
 import io.fabric8.kubernetes.model.annotation.Version;
 import lombok.extern.slf4j.Slf4j;
 
-@Group("bb.traffic-maker.com")
+@Group("bb.com")
 @Version("v1alpha1")
 @Slf4j
 public class TrafficTarget
