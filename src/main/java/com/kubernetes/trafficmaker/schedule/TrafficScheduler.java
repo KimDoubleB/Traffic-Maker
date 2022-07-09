@@ -1,15 +1,19 @@
 package com.kubernetes.trafficmaker.schedule;
 
+import com.kubernetes.trafficmaker.target.HttpTargetSpec;
+import com.kubernetes.trafficmaker.target.TrafficTargetStatus.State;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.Trigger;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
 
-import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 
+@SuppressWarnings("ReactiveStreamsUnusedPublisher")
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -17,19 +21,38 @@ public class TrafficScheduler {
 
     private final Map<String, ScheduledFuture<?>> tasks = new ConcurrentHashMap<>();
     private final TaskScheduler taskScheduler;
+    private final WebClient client;
 
-    public void addFixedRateSchedule(String taskName, Runnable task, Duration period) {
-        tasks.put(taskName, taskScheduler.scheduleAtFixedRate(task, period));
+    public boolean schedule(String taskName, HttpTargetSpec target, Trigger trigger, State currentTrafficState) {
+        var httpRequest = target.toRequestMono(client);
+
+        if (isScheduledTask(taskName)) {
+            if (currentTrafficState == State.SCHEDULING) {
+                updateTask(taskName, taskScheduler.schedule(httpRequest::subscribe, trigger));
+            } else {
+                log.error("Task {} is already scheduled task", taskName);
+                return false;
+            }
+        } else {
+            addTask(taskName, taskScheduler.schedule(httpRequest::subscribe, trigger));
+        }
+        return true;
     }
 
-    public void updateFixedRateSchedule(String taskName, Runnable task, Duration period) {
-        tasks.computeIfPresent(taskName, (t, schedule) -> {
-            schedule.cancel(true);
-            return taskScheduler.scheduleAtFixedRate(task, period);
+    private void addTask(String taskName, ScheduledFuture<?> schedule) {
+        log.info("Task {} will be scheduled from now on", taskName);
+        tasks.put(taskName, schedule);
+    }
+
+    private void updateTask(String taskName, ScheduledFuture<?> schedule) {
+        log.info("Task {} scheduling is updated", taskName);
+        tasks.computeIfPresent(taskName, (t, s) -> {
+            s.cancel(true);
+            return schedule;
         });
     }
 
-    public void removeSchedule(String taskName) {
+    public void removeTask(String taskName) {
         tasks.computeIfPresent(taskName, (t, schedule) -> {
             schedule.cancel(true);
             return tasks.remove(t);
