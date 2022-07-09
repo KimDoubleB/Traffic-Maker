@@ -1,9 +1,9 @@
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-  name: traffictargets.bb.traffic-maker.com
+  name: traffictargets.bb.com
 spec:
-  group: bb.traffic-maker.com
+  group: bb.com
   names:
     kind: TrafficTarget
     plural: traffictargets
@@ -12,55 +12,53 @@ spec:
       - tt
   scope: Namespaced
   versions:
-  - name: v1alpha1
-    schema:
-      openAPIV3Schema:
-        properties:
-          spec:
-            properties:
-              http:
-                properties:
-                  timeoutSeconds:
-                    type: integer
-                  uri:
-                    type: string
-                  headers:
-                    additionalProperties:
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          properties:
+            spec:
+              properties:
+                http:
+                  properties:
+                    timeoutSeconds:
+                      type: integer
+                    uri:
                       type: string
-                    type: object
-                  body:
-                    type: string
-                  method:
-                    type: string
-                type: object
-              rate:
-                type: string
-            type: object
-          status:
-            properties:
-              status:
-                enum:
-                  - SCHEDULING
-                  - FAILURE
-                  - UPDATING
-                  - INITIALIZING
-                type: string
-            type: object
-        type: object
-    additionalPrinterColumns:
-      - name: Target URI
-        type: string
-        description: Target URI value
-        jsonPath: .spec.http.uri
-      - name: Rate
-        type: string
-        description: Scheduling rate
-        jsonPath: .spec.rate
-      - name: Status
-        type: string
-        description: TrafficTarget current status
-        jsonPath: .status.status
-    served: true
-    storage: true
-    subresources:
-      status: {}
+                    headers:
+                      additionalProperties:
+                        type: string
+                      type: object
+                    body:
+                      type: string
+                    method:
+                      type: string
+                  type: object
+                rate:
+                  type: string
+              type: object
+            status:
+              properties:
+                state:
+                  enum:
+                    - SCHEDULING
+                    - FAILURE
+                  type: string
+              type: object
+          type: object
+      additionalPrinterColumns:
+        - name: Target URI
+          type: string
+          description: Target URI value
+          jsonPath: .spec.http.uri
+        - name: Rate
+          type: string
+          description: Scheduling rate
+          jsonPath: .spec.rate
+        - name: State
+          type: string
+          description: TrafficTarget current state
+          jsonPath: .status.state
+      served: true
+      storage: true
+      subresources:
+        status: { }

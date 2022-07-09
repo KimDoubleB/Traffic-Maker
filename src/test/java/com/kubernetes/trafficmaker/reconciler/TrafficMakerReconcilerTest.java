@@ -5,7 +5,7 @@ import com.kubernetes.trafficmaker.target.HttpTargetSpec;
 import com.kubernetes.trafficmaker.target.TrafficTarget;
 import com.kubernetes.trafficmaker.target.TrafficTargetSpec;
 import com.kubernetes.trafficmaker.target.TrafficTargetStatus;
-import com.kubernetes.trafficmaker.target.TrafficTargetStatus.Status;
+import com.kubernetes.trafficmaker.target.TrafficTargetStatus.State;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.javaoperatorsdk.operator.api.reconciler.DefaultContext;
@@ -18,7 +18,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.convert.DurationStyle;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import java.time.Duration;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -56,9 +55,8 @@ class TrafficMakerReconcilerTest {
 
         // then
         assertThat(updateControl.isUpdateStatus()).isTrue();
-        assertThat(trafficTarget.getStatus().status()).isEqualTo(Status.SCHEDULING);
-        verify(trafficScheduler)
-                .addFixedRateSchedule(eq(DEFAULT_RESOURCE_NAME), any(), eq(period));
+        assertThat(trafficTarget.getStatus().state()).isEqualTo(State.SCHEDULING);
+        verify(trafficScheduler).addFixedRateSchedule(eq(DEFAULT_RESOURCE_NAME), any(), eq(period));
     }
 
     @DisplayName("첫 Reconcile - 중복된 이름의 schedule task가 있는 경우, 실패한다")
@@ -66,32 +64,31 @@ class TrafficMakerReconcilerTest {
     void first_reconcile_exist_duplicated_schedule_task_failure() {
         // given
         var trafficTarget = dummyTrafficTarget();
-        given(trafficScheduler.isScheduledTask(DEFAULT_RESOURCE_NAME))
-                .willReturn(true);
+        given(trafficScheduler.isScheduledTask(DEFAULT_RESOURCE_NAME)).willReturn(true);
 
         // when
         var updateControl = trafficMakerReconciler.reconcile(trafficTarget, DEFAULT_CONTEXT);
 
         // then
         assertThat(updateControl.isUpdateStatus()).isTrue();
-        assertThat(trafficTarget.getStatus().status()).isEqualTo(Status.FAILURE);
+        assertThat(trafficTarget.getStatus().state()).isEqualTo(State.FAILURE);
     }
 
-    @DisplayName("Failure status인 경우 업데이트 되었을 수 있으니 UPDATING status로 업데이트하고 5초 뒤 reconcile 수행")
+    @DisplayName("Failure state reconcile 시, 수정된 메니페스트가 정상적으로 등록이 가능하면 성공한다")
     @Test
-    void update_status_to_UPDATING_and_after_5_seconds_reconcile_when_failure_status() {
+    void success_valid_updated_manifest_when_failure_state() {
         // given
         var trafficTarget = dummyTrafficTarget();
-        trafficTarget.setStatus(new TrafficTargetStatus(Status.FAILURE));
+        trafficTarget.setStatus(new TrafficTargetStatus(State.FAILURE));
+        var period = DurationStyle.detectAndParse(DEFAULT_RATE);
 
         // when
         var updateControl = trafficMakerReconciler.reconcile(trafficTarget, DEFAULT_CONTEXT);
 
         // then
         assertThat(updateControl.isUpdateStatus()).isTrue();
-        assertThat(updateControl.getScheduleDelay()).isPresent();
-        assertThat(updateControl.getScheduleDelay()).contains(Duration.ofSeconds(5).toMillis());
-        assertThat(trafficTarget.getStatus().status()).isEqualTo(Status.UPDATING);
+        assertThat(trafficTarget.getStatus().state()).isEqualTo(State.SCHEDULING);
+        verify(trafficScheduler).addFixedRateSchedule(eq(DEFAULT_RESOURCE_NAME), any(), eq(period));
     }
 
     @DisplayName("Scheduling status인 경우 spec 정보가 업데이트 되었을 수도 있으니 schedule task를 업데이트한다")
@@ -100,18 +97,15 @@ class TrafficMakerReconcilerTest {
         // given
         var trafficTarget = dummyTrafficTarget();
         var period = DurationStyle.detectAndParse(DEFAULT_RATE);
-        trafficTarget.setStatus(new TrafficTargetStatus(Status.SCHEDULING));
-        given(trafficScheduler.isScheduledTask(DEFAULT_RESOURCE_NAME))
-                .willReturn(true);
+        trafficTarget.setStatus(new TrafficTargetStatus(State.SCHEDULING));
+        given(trafficScheduler.isScheduledTask(DEFAULT_RESOURCE_NAME)).willReturn(true);
 
         // when
         var updateControl = trafficMakerReconciler.reconcile(trafficTarget, DEFAULT_CONTEXT);
 
         // then
-        assertThat(updateControl.isNoUpdate()).isTrue();
-        assertThat(trafficTarget.getStatus().status()).isEqualTo(Status.SCHEDULING);
-        verify(trafficScheduler)
-                .updateFixedRateSchedule(eq(DEFAULT_RESOURCE_NAME), any(), eq(period));
+        assertThat(trafficTarget.getStatus().state()).isEqualTo(State.SCHEDULING);
+        verify(trafficScheduler).updateFixedRateSchedule(eq(DEFAULT_RESOURCE_NAME), any(), eq(period));
     }
 
     @DisplayName("Scheduling status인 경우인데 schedule task가 존재하지 않는 경우, 현재 spec으로 schedule task를 추가한다")
@@ -120,18 +114,15 @@ class TrafficMakerReconcilerTest {
         // given
         var trafficTarget = dummyTrafficTarget();
         var period = DurationStyle.detectAndParse(DEFAULT_RATE);
-        trafficTarget.setStatus(new TrafficTargetStatus(Status.SCHEDULING));
-        given(trafficScheduler.isScheduledTask(DEFAULT_RESOURCE_NAME))
-                .willReturn(false);
+        trafficTarget.setStatus(new TrafficTargetStatus(State.SCHEDULING));
+        given(trafficScheduler.isScheduledTask(DEFAULT_RESOURCE_NAME)).willReturn(false);
 
         // when
         var updateControl = trafficMakerReconciler.reconcile(trafficTarget, DEFAULT_CONTEXT);
 
         // then
-        assertThat(updateControl.isNoUpdate()).isTrue();
-        assertThat(trafficTarget.getStatus().status()).isEqualTo(Status.SCHEDULING);
-        verify(trafficScheduler)
-                .addFixedRateSchedule(eq(DEFAULT_RESOURCE_NAME), any(), eq(period));
+        assertThat(trafficTarget.getStatus().state()).isEqualTo(State.SCHEDULING);
+        verify(trafficScheduler).addFixedRateSchedule(eq(DEFAULT_RESOURCE_NAME), any(), eq(period));
     }
 
     @DisplayName("Clean up 수행 시, finalizer가 정상제거된다")
@@ -145,8 +136,7 @@ class TrafficMakerReconcilerTest {
 
         // then
         assertThat(deleteControl.isRemoveFinalizer()).isTrue();
-        verify(trafficScheduler)
-                .removeSchedule(DEFAULT_RESOURCE_NAME);
+        verify(trafficScheduler).removeSchedule(DEFAULT_RESOURCE_NAME);
     }
 
     TrafficTarget dummyTrafficTarget() {

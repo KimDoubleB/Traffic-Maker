@@ -1,4 +1,4 @@
-apiVersion: bb.traffic-maker.com/v1alpha1
+apiVersion: bb.com/v1alpha1
 kind: TrafficTarget
 metadata:
   name: traffic-target-sample

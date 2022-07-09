@@ -1,11 +1,11 @@
 package com.kubernetes.trafficmaker.target;
 
-public record TrafficTargetStatus(Status status) {
-    public enum Status {
+public record TrafficTargetStatus(State state) {
+    public enum State {
+
         SCHEDULING,
         FAILURE,
-        UPDATING,
-        INITIALIZING,
+
     }
 
 }
