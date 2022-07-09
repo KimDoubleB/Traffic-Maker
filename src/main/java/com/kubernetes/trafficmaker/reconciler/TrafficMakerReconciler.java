@@ -2,7 +2,7 @@ package com.kubernetes.trafficmaker.reconciler;
 
 import com.kubernetes.trafficmaker.schedule.TrafficScheduler;
 import com.kubernetes.trafficmaker.target.TrafficTarget;
-import com.kubernetes.trafficmaker.target.TrafficTargetStatus.Status;
+import com.kubernetes.trafficmaker.target.TrafficTargetStatus.State;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.javaoperatorsdk.operator.api.reconciler.ControllerConfiguration;
 import io.javaoperatorsdk.operator.api.reconciler.DeleteControl;
@@ -30,11 +30,11 @@ public class TrafficMakerReconciler implements Reconciler<TrafficTarget> {
     public UpdateControl<TrafficTarget> reconcile(TrafficTarget trafficTarget, Context context) {
         log.debug("Reconcile by trafficTarget {}", trafficTarget);
 
-        var status = trafficTarget.getStatus() != null
-                             ? trafficTarget.getStatus().status() : Status.INITIALIZING;
-        return switch (status) {
-            case FAILURE -> failureStatusReconcile(trafficTarget);
-            case SCHEDULING -> schedulingStatusReconcile(trafficTarget);
+        var state = trafficTarget.getStatus() != null
+                            ? trafficTarget.getStatus().state() : State.INITIALIZING;
+        return switch (state) {
+            case FAILURE -> failureStateReconcile(trafficTarget);
+            case SCHEDULING -> schedulingStateReconcile(trafficTarget);
             default -> reconcile(trafficTarget);
         };
     }
@@ -48,13 +48,13 @@ public class TrafficMakerReconciler implements Reconciler<TrafficTarget> {
         return DeleteControl.defaultDelete();
     }
 
-    private UpdateControl<TrafficTarget> failureStatusReconcile(TrafficTarget trafficTarget) {
-        trafficTarget.updateTrafficTaskStatus(Status.UPDATING);
+    private UpdateControl<TrafficTarget> failureStateReconcile(TrafficTarget trafficTarget) {
+        trafficTarget.updateTrafficTaskState(State.UPDATING);
         return UpdateControl.updateStatus(trafficTarget)
                        .rescheduleAfter(5, TimeUnit.SECONDS);
     }
 
-    private UpdateControl<TrafficTarget> schedulingStatusReconcile(TrafficTarget trafficTarget) {
+    private UpdateControl<TrafficTarget> schedulingStateReconcile(TrafficTarget trafficTarget) {
         var taskName = trafficTarget.getMetadata().getName();
         var httpTargetSpec = trafficTarget.getSpec().http();
         var httpRequestMono = httpTargetSpec.toRequestMono(webClient);
@@ -76,10 +76,10 @@ public class TrafficMakerReconciler implements Reconciler<TrafficTarget> {
 
         if (trafficScheduler.isScheduledTask(taskName)) {
             log.warn("Task {} is already scheduled task.", taskName);
-            trafficTarget.updateTrafficTaskStatus(Status.FAILURE);
+            trafficTarget.updateTrafficTaskState(State.FAILURE);
         } else {
             trafficScheduler.addFixedRateSchedule(taskName, httpRequestMono::subscribe, period);
-            trafficTarget.updateTrafficTaskStatus(Status.SCHEDULING);
+            trafficTarget.updateTrafficTaskState(State.SCHEDULING);
         }
         return UpdateControl.updateStatus(trafficTarget);
     }

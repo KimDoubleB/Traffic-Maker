@@ -5,7 +5,7 @@ import com.kubernetes.trafficmaker.target.HttpTargetSpec;
 import com.kubernetes.trafficmaker.target.TrafficTarget;
 import com.kubernetes.trafficmaker.target.TrafficTargetSpec;
 import com.kubernetes.trafficmaker.target.TrafficTargetStatus;
-import com.kubernetes.trafficmaker.target.TrafficTargetStatus.Status;
+import com.kubernetes.trafficmaker.target.TrafficTargetStatus.State;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.javaoperatorsdk.operator.api.reconciler.DefaultContext;
@@ -56,7 +56,7 @@ class TrafficMakerReconcilerTest {
 
         // then
         assertThat(updateControl.isUpdateStatus()).isTrue();
-        assertThat(trafficTarget.getStatus().status()).isEqualTo(Status.SCHEDULING);
+        assertThat(trafficTarget.getStatus().state()).isEqualTo(State.SCHEDULING);
         verify(trafficScheduler)
                 .addFixedRateSchedule(eq(DEFAULT_RESOURCE_NAME), any(), eq(period));
     }
@@ -74,7 +74,7 @@ class TrafficMakerReconcilerTest {
 
         // then
         assertThat(updateControl.isUpdateStatus()).isTrue();
-        assertThat(trafficTarget.getStatus().status()).isEqualTo(Status.FAILURE);
+        assertThat(trafficTarget.getStatus().state()).isEqualTo(State.FAILURE);
     }
 
     @DisplayName("Failure status인 경우 업데이트 되었을 수 있으니 UPDATING status로 업데이트하고 5초 뒤 reconcile 수행")
@@ -82,7 +82,7 @@ class TrafficMakerReconcilerTest {
     void update_status_to_UPDATING_and_after_5_seconds_reconcile_when_failure_status() {
         // given
         var trafficTarget = dummyTrafficTarget();
-        trafficTarget.setStatus(new TrafficTargetStatus(Status.FAILURE));
+        trafficTarget.setStatus(new TrafficTargetStatus(State.FAILURE));
 
         // when
         var updateControl = trafficMakerReconciler.reconcile(trafficTarget, DEFAULT_CONTEXT);
@@ -91,7 +91,7 @@ class TrafficMakerReconcilerTest {
         assertThat(updateControl.isUpdateStatus()).isTrue();
         assertThat(updateControl.getScheduleDelay()).isPresent();
         assertThat(updateControl.getScheduleDelay()).contains(Duration.ofSeconds(5).toMillis());
-        assertThat(trafficTarget.getStatus().status()).isEqualTo(Status.UPDATING);
+        assertThat(trafficTarget.getStatus().state()).isEqualTo(State.UPDATING);
     }
 
     @DisplayName("Scheduling status인 경우 spec 정보가 업데이트 되었을 수도 있으니 schedule task를 업데이트한다")
@@ -100,7 +100,7 @@ class TrafficMakerReconcilerTest {
         // given
         var trafficTarget = dummyTrafficTarget();
         var period = DurationStyle.detectAndParse(DEFAULT_RATE);
-        trafficTarget.setStatus(new TrafficTargetStatus(Status.SCHEDULING));
+        trafficTarget.setStatus(new TrafficTargetStatus(State.SCHEDULING));
         given(trafficScheduler.isScheduledTask(DEFAULT_RESOURCE_NAME))
                 .willReturn(true);
 
@@ -109,7 +109,7 @@ class TrafficMakerReconcilerTest {
 
         // then
         assertThat(updateControl.isNoUpdate()).isTrue();
-        assertThat(trafficTarget.getStatus().status()).isEqualTo(Status.SCHEDULING);
+        assertThat(trafficTarget.getStatus().state()).isEqualTo(State.SCHEDULING);
         verify(trafficScheduler)
                 .updateFixedRateSchedule(eq(DEFAULT_RESOURCE_NAME), any(), eq(period));
     }
@@ -120,7 +120,7 @@ class TrafficMakerReconcilerTest {
         // given
         var trafficTarget = dummyTrafficTarget();
         var period = DurationStyle.detectAndParse(DEFAULT_RATE);
-        trafficTarget.setStatus(new TrafficTargetStatus(Status.SCHEDULING));
+        trafficTarget.setStatus(new TrafficTargetStatus(State.SCHEDULING));
         given(trafficScheduler.isScheduledTask(DEFAULT_RESOURCE_NAME))
                 .willReturn(false);
 
@@ -129,7 +129,7 @@ class TrafficMakerReconcilerTest {
 
         // then
         assertThat(updateControl.isNoUpdate()).isTrue();
-        assertThat(trafficTarget.getStatus().status()).isEqualTo(Status.SCHEDULING);
+        assertThat(trafficTarget.getStatus().state()).isEqualTo(State.SCHEDULING);
         verify(trafficScheduler)
                 .addFixedRateSchedule(eq(DEFAULT_RESOURCE_NAME), any(), eq(period));
     }

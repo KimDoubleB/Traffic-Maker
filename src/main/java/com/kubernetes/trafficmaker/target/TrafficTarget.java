@@ -13,8 +13,8 @@ public class TrafficTarget
         extends CustomResource<TrafficTargetSpec, TrafficTargetStatus>
         implements Namespaced {
 
-    public void updateTrafficTaskStatus(TrafficTargetStatus.Status status) {
-        setStatus(new TrafficTargetStatus(status));
+    public void updateTrafficTaskState(TrafficTargetStatus.State state) {
+        setStatus(new TrafficTargetStatus(state));
     }
 
 }
