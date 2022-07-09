@@ -1,5 +1,6 @@
 package com.kubernetes.trafficmaker.reconciler;
 
+import com.kubernetes.trafficmaker.model.TrafficTarget;
 import com.kubernetes.trafficmaker.schedule.TrafficScheduler;
 import com.kubernetes.trafficmaker.model.rate.RateTrafficTarget;
 import com.kubernetes.trafficmaker.model.TrafficTargetStatus.State;
@@ -31,13 +32,8 @@ public class RateTrafficMakerReconciler implements Reconciler<RateTrafficTarget>
     public UpdateControl<RateTrafficTarget> reconcile(RateTrafficTarget rateTrafficTarget, Context context) {
         log.debug("Reconcile by trafficTarget {}", rateTrafficTarget);
 
-        var taskName = rateTrafficTarget.getMetadata().getName();
-        var target = rateTrafficTarget.getSpec().http();
-        var trigger = new PeriodicTrigger(rateTrafficTarget.getSpec().rate());
-        var currentState = rateTrafficTarget.getStatus() != null
-                           ? rateTrafficTarget.getStatus().state() : null;
-
-        var isScheduled = trafficScheduler.schedule(taskName, target, trigger, currentState);
+        var trafficTarget = TrafficTarget.fromRate(rateTrafficTarget);
+        var isScheduled = trafficScheduler.schedule(trafficTarget);
         rateTrafficTarget.updateTrafficTargetState(isScheduled);
         return UpdateControl.updateStatus(rateTrafficTarget);
     }

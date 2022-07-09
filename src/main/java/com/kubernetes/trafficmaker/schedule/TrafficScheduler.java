@@ -1,6 +1,7 @@
 package com.kubernetes.trafficmaker.schedule;
 
 import com.kubernetes.trafficmaker.model.HttpTargetSpec;
+import com.kubernetes.trafficmaker.model.TrafficTarget;
 import com.kubernetes.trafficmaker.model.TrafficTargetStatus.State;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,11 @@ public class TrafficScheduler {
     private final Map<String, ScheduledFuture<?>> tasks = new ConcurrentHashMap<>();
     private final TaskScheduler taskScheduler;
     private final WebClient client;
+
+    public boolean schedule(TrafficTarget trafficTarget) {
+        return this.schedule(trafficTarget.getName(), trafficTarget.getHttp(),
+                             trafficTarget.getTrigger(), trafficTarget.getState());
+    }
 
     public boolean schedule(String taskName, HttpTargetSpec target, Trigger trigger, State currentTrafficState) {
         var httpRequest = target.toRequestMono(client);

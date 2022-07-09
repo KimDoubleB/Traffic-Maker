@@ -1,5 +1,6 @@
 package com.kubernetes.trafficmaker.reconciler;
 
+import com.kubernetes.trafficmaker.model.TrafficTarget;
 import com.kubernetes.trafficmaker.schedule.TrafficScheduler;
 import com.kubernetes.trafficmaker.model.cron.CronTrafficTarget;
 import com.kubernetes.trafficmaker.model.TrafficTargetStatus.State;
@@ -31,13 +32,8 @@ public class CronTrafficMakerReconciler implements Reconciler<CronTrafficTarget>
     public UpdateControl<CronTrafficTarget> reconcile(CronTrafficTarget cronTrafficTarget, Context context) {
         log.debug("Reconcile by trafficTarget {}", cronTrafficTarget);
 
-        var taskName = cronTrafficTarget.getMetadata().getName();
-        var target = cronTrafficTarget.getSpec().http();
-        var trigger = new CronTrigger(cronTrafficTarget.getSpec().cron());
-        var currentState = cronTrafficTarget.getStatus() != null
-                           ? cronTrafficTarget.getStatus().state() : null;
-
-        var isScheduled = trafficScheduler.schedule(taskName, target, trigger, currentState);
+        var trafficTarget = TrafficTarget.fromCron(cronTrafficTarget);
+        var isScheduled = trafficScheduler.schedule(trafficTarget);
         cronTrafficTarget.updateTrafficTargetState(isScheduled);
         return UpdateControl.updateStatus(cronTrafficTarget);
     }
