@@ -44,11 +44,8 @@ public class CronTrafficMakerReconciler implements Reconciler<CronTrafficTarget>
 
     @Override
     public DeleteControl cleanup(CronTrafficTarget cronTrafficTarget, Context context) {
-        log.debug("Cleanup by trafficTarget {}", cronTrafficTarget);
-
-        var taskName = cronTrafficTarget.getMetadata().getName();
-        trafficScheduler.removeTask(taskName);
-        return DeleteControl.defaultDelete();
+        log.debug("Cleanup by CronTrafficTarget {}", cronTrafficTarget);
+        return TrafficMakerCleaner.cleanup(trafficScheduler, cronTrafficTarget);
     }
 
     @Override

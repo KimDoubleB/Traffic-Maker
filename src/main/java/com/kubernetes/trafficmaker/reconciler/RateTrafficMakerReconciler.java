@@ -44,11 +44,8 @@ public class RateTrafficMakerReconciler implements Reconciler<RateTrafficTarget>
 
     @Override
     public DeleteControl cleanup(RateTrafficTarget rateTrafficTarget, Context context) {
-        log.debug("Cleanup by trafficTarget {}", rateTrafficTarget);
-
-        var taskName = rateTrafficTarget.getMetadata().getName();
-        trafficScheduler.removeTask(taskName);
-        return DeleteControl.defaultDelete();
+        log.debug("Cleanup by RateTrafficTarget {}", rateTrafficTarget);
+        return TrafficMakerCleaner.cleanup(trafficScheduler, rateTrafficTarget);
     }
 
     @Override
