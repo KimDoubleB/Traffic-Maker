@@ -3,6 +3,7 @@ package com.kubernetes.trafficmaker.reconciler;
 import com.kubernetes.trafficmaker.schedule.TrafficScheduleTask;
 import com.kubernetes.trafficmaker.schedule.TrafficScheduler;
 import com.kubernetes.trafficmaker.target.TrafficTarget;
+import com.kubernetes.trafficmaker.target.TrafficTargetStatus.State;
 import io.javaoperatorsdk.operator.api.reconciler.Cleaner;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.javaoperatorsdk.operator.api.reconciler.ControllerConfiguration;
@@ -10,6 +11,7 @@ import io.javaoperatorsdk.operator.api.reconciler.DeleteControl;
 import io.javaoperatorsdk.operator.api.reconciler.ErrorStatusHandler;
 import io.javaoperatorsdk.operator.api.reconciler.ErrorStatusUpdateControl;
 import io.javaoperatorsdk.operator.api.reconciler.Reconciler;
+import io.javaoperatorsdk.operator.api.reconciler.RetryInfo;
 import io.javaoperatorsdk.operator.api.reconciler.UpdateControl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,8 +53,14 @@ public class TrafficMakerReconciler implements Reconciler<TrafficTarget>,
     }
 
     @Override
-    public ErrorStatusUpdateControl<TrafficTarget> updateErrorStatus(TrafficTarget resource, Context<TrafficTarget> context, Exception e) {
-        return null;
+    public ErrorStatusUpdateControl<TrafficTarget> updateErrorStatus(TrafficTarget trafficTarget,
+                                                                     Context<TrafficTarget> context,
+                                                                     Exception e) {
+        var retryCount = context.getRetryInfo().map(RetryInfo::getAttemptCount).orElse(0);
+        log.error("Error occurred [Retry count {}]. Caused by [{}]. Exception message: {}",
+                  retryCount, e.getClass(), e.getMessage());
+        trafficTarget.updateTrafficTaskState(State.ERROR);
+        return ErrorStatusUpdateControl.updateStatus(trafficTarget);
     }
 
 }

@@ -5,6 +5,7 @@ public record TrafficTargetStatus(State state) {
 
         SCHEDULING,
         FAILURE,
+        ERROR,
 
     }
 
