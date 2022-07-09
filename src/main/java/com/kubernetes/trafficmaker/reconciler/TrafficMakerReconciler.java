@@ -14,8 +14,6 @@ import org.springframework.boot.convert.DurationStyle;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import java.util.concurrent.TimeUnit;
-
 @SuppressWarnings("ReactiveStreamsUnusedPublisher")
 @ControllerConfiguration
 @Component
@@ -33,7 +31,6 @@ public class TrafficMakerReconciler implements Reconciler<TrafficTarget> {
         var state = trafficTarget.getStatus() != null
                             ? trafficTarget.getStatus().state() : State.INITIALIZING;
         return switch (state) {
-            case FAILURE -> failureStateReconcile(trafficTarget);
             case SCHEDULING -> schedulingStateReconcile(trafficTarget);
             default -> reconcile(trafficTarget);
         };
@@ -46,12 +43,6 @@ public class TrafficMakerReconciler implements Reconciler<TrafficTarget> {
         var taskName = trafficTarget.getMetadata().getName();
         trafficScheduler.removeSchedule(taskName);
         return DeleteControl.defaultDelete();
-    }
-
-    private UpdateControl<TrafficTarget> failureStateReconcile(TrafficTarget trafficTarget) {
-        trafficTarget.updateTrafficTaskState(State.UPDATING);
-        return UpdateControl.updateStatus(trafficTarget)
-                       .rescheduleAfter(5, TimeUnit.SECONDS);
     }
 
     private UpdateControl<TrafficTarget> schedulingStateReconcile(TrafficTarget trafficTarget) {
