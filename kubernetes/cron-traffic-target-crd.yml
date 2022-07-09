@@ -1,0 +1,68 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: crontraffictargets.bb.com
+spec:
+  group: bb.com
+  names:
+    kind: CronTrafficTarget
+    plural: crontraffictargets
+    singular: crontraffictarget
+    shortNames:
+      - ctt
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          properties:
+            spec:
+              properties:
+                http:
+                  properties:
+                    timeoutSeconds:
+                      type: integer
+                    uri:
+                      type: string
+                    headers:
+                      additionalProperties:
+                        type: string
+                      type: object
+                    body:
+                      type: string
+                    method:
+                      type: string
+                  type: object
+                cron:
+                  type: string
+              required:
+                - cron
+                - http
+              type: object
+            status:
+              properties:
+                state:
+                  enum:
+                    - SCHEDULING
+                    - FAILURE
+                    - ERROR
+                  type: string
+              type: object
+          type: object
+      additionalPrinterColumns:
+        - name: Target URI
+          type: string
+          description: Target URI value
+          jsonPath: .spec.http.uri
+        - name: Cron
+          type: string
+          description: Scheduling cron expression
+          jsonPath: .spec.cron
+        - name: State
+          type: string
+          description: TrafficTarget current state
+          jsonPath: .status.state
+      served: true
+      storage: true
+      subresources:
+        status: { }
