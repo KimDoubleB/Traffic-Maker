@@ -1,7 +1,7 @@
 apiVersion: bb.com/v1alpha1
 kind: CronTrafficTarget
 metadata:
-  name: rate-traffic-target-sample
+  name: cron-traffic-target-sample
 spec:
   http:
     timeoutSeconds: 10
