@@ -30,40 +30,19 @@ public class TrafficMakerReconciler implements Reconciler<TrafficTarget> {
 
         var state = trafficTarget.getStatus() != null
                             ? trafficTarget.getStatus().state() : State.INITIALIZING;
-        return switch (state) {
-            case SCHEDULING -> schedulingStateReconcile(trafficTarget);
-            default -> reconcile(trafficTarget);
-        };
-    }
-
-    @Override
-    public DeleteControl cleanup(TrafficTarget trafficTarget, Context context) {
-        log.debug("Cleanup by trafficTarget {}", trafficTarget);
-
-        var taskName = trafficTarget.getMetadata().getName();
-        trafficScheduler.removeSchedule(taskName);
-        return DeleteControl.defaultDelete();
-    }
-
-    private UpdateControl<TrafficTarget> schedulingStateReconcile(TrafficTarget trafficTarget) {
         var taskName = trafficTarget.getMetadata().getName();
         var httpTargetSpec = trafficTarget.getSpec().http();
         var httpRequestMono = httpTargetSpec.toRequestMono(webClient);
         var period = DurationStyle.detectAndParse(trafficTarget.getSpec().rate());
 
-        if (trafficScheduler.isScheduledTask(taskName)) {
-            trafficScheduler.updateFixedRateSchedule(taskName, httpRequestMono::subscribe, period);
-        } else {
-            trafficScheduler.addFixedRateSchedule(taskName, httpRequestMono::subscribe, period);
+        if (state == State.SCHEDULING) {
+            if (trafficScheduler.isScheduledTask(taskName)) {
+                trafficScheduler.updateFixedRateSchedule(taskName, httpRequestMono::subscribe, period);
+            } else {
+                trafficScheduler.addFixedRateSchedule(taskName, httpRequestMono::subscribe, period);
+            }
+            return UpdateControl.noUpdate();
         }
-        return UpdateControl.noUpdate();
-    }
-
-    private UpdateControl<TrafficTarget> reconcile(TrafficTarget trafficTarget) {
-        var taskName = trafficTarget.getMetadata().getName();
-        var httpTargetSpec = trafficTarget.getSpec().http();
-        var httpRequestMono = httpTargetSpec.toRequestMono(webClient);
-        var period = DurationStyle.detectAndParse(trafficTarget.getSpec().rate());
 
         if (trafficScheduler.isScheduledTask(taskName)) {
             log.error("Task {} is already scheduled task.", taskName);
@@ -73,6 +52,15 @@ public class TrafficMakerReconciler implements Reconciler<TrafficTarget> {
             trafficTarget.updateTrafficTaskState(State.SCHEDULING);
         }
         return UpdateControl.updateStatus(trafficTarget);
+    }
+
+    @Override
+    public DeleteControl cleanup(TrafficTarget trafficTarget, Context context) {
+        log.debug("Cleanup by trafficTarget {}", trafficTarget);
+
+        var taskName = trafficTarget.getMetadata().getName();
+        trafficScheduler.removeSchedule(taskName);
+        return DeleteControl.defaultDelete();
     }
 
 }
