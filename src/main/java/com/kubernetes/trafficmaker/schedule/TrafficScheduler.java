@@ -52,17 +52,18 @@ public class TrafficScheduler {
 
     private void updateTask(String taskName, ScheduledFuture<?> schedule) {
         log.info("Task {} scheduling is updated", taskName);
-        tasks.computeIfPresent(taskName, (t, s) -> {
-            s.cancel(true);
-            return schedule;
-        });
+        if (tasks.containsKey(taskName)) {
+            tasks.get(taskName).cancel(true);
+            addTask(taskName, schedule);
+        }
     }
 
     public void removeTask(String taskName) {
-        tasks.computeIfPresent(taskName, (t, schedule) -> {
-            schedule.cancel(true);
-            return tasks.remove(t);
-        });
+        log.info("Task {} is deleted", taskName);
+        if (tasks.containsKey(taskName)) {
+            tasks.get(taskName).cancel(true);
+            tasks.remove(taskName);
+        }
     }
 
     public boolean isScheduledTask(String taskName) {
