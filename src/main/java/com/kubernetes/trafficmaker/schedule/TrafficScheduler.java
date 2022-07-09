@@ -1,6 +1,5 @@
 package com.kubernetes.trafficmaker.schedule;
 
-import com.kubernetes.trafficmaker.model.HttpTargetSpec;
 import com.kubernetes.trafficmaker.model.TrafficTarget;
 import com.kubernetes.trafficmaker.model.TrafficTargetStatus.State;
 import lombok.RequiredArgsConstructor;
@@ -9,12 +8,12 @@ import org.springframework.scheduling.Trigger;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 
-@SuppressWarnings("ReactiveStreamsUnusedPublisher")
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -25,13 +24,11 @@ public class TrafficScheduler {
     private final WebClient client;
 
     public boolean schedule(TrafficTarget trafficTarget) {
-        return this.schedule(trafficTarget.getName(), trafficTarget.getHttp(),
+        return this.schedule(trafficTarget.getName(), trafficTarget.getHttp().toRequestMono(client),
                              trafficTarget.getTrigger(), trafficTarget.getState());
     }
 
-    public boolean schedule(String taskName, HttpTargetSpec target, Trigger trigger, State currentTrafficState) {
-        var httpRequest = target.toRequestMono(client);
-
+    public boolean schedule(String taskName, Mono<?> httpRequest, Trigger trigger, State currentTrafficState) {
         if (isScheduledTask(taskName)) {
             if (currentTrafficState == State.SCHEDULING) {
                 updateTask(taskName, taskScheduler.schedule(httpRequest::subscribe, trigger));
