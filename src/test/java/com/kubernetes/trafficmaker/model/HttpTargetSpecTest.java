@@ -1,4 +1,4 @@
-package com.kubernetes.trafficmaker.target;
+package com.kubernetes.trafficmaker.model;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -52,23 +52,23 @@ class HttpTargetSpecTest {
         // and define mock client
         var result = "REQUEST COMPLETE";
         var mockHeaders = headers.keySet().stream()
-                                  .map(headerKey -> new Header(headerKey, headers.get(headerKey)))
-                                  .toList();
+                                 .map(headerKey -> new Header(headerKey, headers.get(headerKey)))
+                                 .toList();
         mockServerClient
-                .when(request()
-                              .withMethod(method)
-                              .withHeaders(mockHeaders)
-                              .withBody(body))
-                .respond(response()
-                                 .withBody(result));
+            .when(request()
+                      .withMethod(method)
+                      .withHeaders(mockHeaders)
+                      .withBody(body))
+            .respond(response()
+                         .withBody(result));
 
         // when
         var requestMono = httpTargetSpec.toRequestMono(WebClient.create());
 
         // then
         StepVerifier.create(requestMono)
-                .expectNext(result)
-                .verifyComplete();
+                    .expectNext(result)
+                    .verifyComplete();
         mockServerClient.verify(request().withMethod(method), VerificationTimes.exactly(1));
     }
 
@@ -82,16 +82,16 @@ class HttpTargetSpecTest {
 
         // and define mock client
         mockServerClient
-                .when(request().withMethod(method))
-                .respond(response().withDelay(TimeUnit.SECONDS, 5));
+            .when(request().withMethod(method))
+            .respond(response().withDelay(TimeUnit.SECONDS, 5));
 
         // when
         var requestMono = httpTargetSpec.toRequestMono(WebClient.create());
 
         // then
         StepVerifier.create(requestMono)
-                .expectError(TimeoutException.class)
-                .verify();
+                    .expectError(TimeoutException.class)
+                    .verify();
     }
 
 }

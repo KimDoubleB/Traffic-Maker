@@ -1,0 +1,15 @@
+apiVersion: bb.com/v1alpha1
+kind: CronTrafficTarget
+metadata:
+  name: cron-traffic-target-sample
+spec:
+  http:
+    timeoutSeconds: 10
+    headers:
+      HEADER-SAMPLE: "header-value"
+      HEADER-SAMPLE2: "header-value2"
+    body: "{\"message\": \"Hello, World!\"}"
+    method: POST
+    uri: "localhost:8081"
+  cron: "*/10 * * * * *"
+  timezone: "Asia/Seoul"

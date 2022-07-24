@@ -14,5 +14,5 @@ build:
           - BP_JVM_VERSION=17
 deploy:
   kubectl:
-    manifests: ["./kubernetes/traffic-target-crd.yml",
+    manifests: ["./kubernetes/crd/**.yml",
                 "./kubernetes/cloudcode/**.yml"]

@@ -1,7 +1,7 @@
 apiVersion: bb.com/v1alpha1
-kind: TrafficTarget
+kind: RateTrafficTarget
 metadata:
-  name: traffic-target-sample
+  name: rate-traffic-target-sample
 spec:
   http:
     timeoutSeconds: 10
@@ -11,4 +11,4 @@ spec:
     body: "{\"message\": \"Hello, World!\"}"
     method: POST
     uri: "localhost:8081"
-  rate: "30s"
+  rate: 3000

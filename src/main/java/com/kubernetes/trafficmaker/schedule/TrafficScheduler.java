@@ -1,11 +1,15 @@
 package com.kubernetes.trafficmaker.schedule;
 
+import com.kubernetes.trafficmaker.model.TrafficTarget;
+import com.kubernetes.trafficmaker.model.TrafficTargetStatus.State;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.Trigger;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
-import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
@@ -16,28 +20,57 @@ import java.util.concurrent.ScheduledFuture;
 public class TrafficScheduler {
 
     private final Map<String, ScheduledFuture<?>> tasks = new ConcurrentHashMap<>();
-    private final TaskScheduler taskScheduler;
+    private final ThreadPoolTaskScheduler taskScheduler;
+    private final WebClient client;
 
-    public void addFixedRateSchedule(String taskName, Runnable task, Duration period) {
-        tasks.put(taskName, taskScheduler.scheduleAtFixedRate(task, period));
+    public boolean schedule(TrafficTarget trafficTarget) {
+        return this.schedule(trafficTarget.getName(), trafficTarget.getHttp().toRequestMono(client),
+                             trafficTarget.getTrigger(), trafficTarget.getState());
     }
 
-    public void updateFixedRateSchedule(String taskName, Runnable task, Duration period) {
-        tasks.computeIfPresent(taskName, (t, schedule) -> {
-            schedule.cancel(true);
-            return taskScheduler.scheduleAtFixedRate(task, period);
-        });
+    public boolean schedule(String taskName, Mono<?> httpRequest, Trigger trigger, State currentTrafficState) {
+        if (isScheduledTask(taskName)) {
+            if (currentTrafficState == State.SCHEDULING) {
+                updateTask(taskName, taskScheduler.schedule(httpRequest::subscribe, trigger));
+            } else {
+                log.error("Task {} is already scheduled task", taskName);
+                return false;
+            }
+        } else {
+            addTask(taskName, taskScheduler.schedule(httpRequest::subscribe, trigger));
+        }
+        return true;
     }
 
-    public void removeSchedule(String taskName) {
-        tasks.computeIfPresent(taskName, (t, schedule) -> {
-            schedule.cancel(true);
-            return tasks.remove(t);
-        });
+    private void addTask(String taskName, ScheduledFuture<?> schedule) {
+        log.info("Task {} will be scheduled from now on", taskName);
+        tasks.put(taskName, schedule);
+    }
+
+    private void updateTask(String taskName, ScheduledFuture<?> schedule) {
+        log.info("Task {} scheduling is updated", taskName);
+        if (tasks.containsKey(taskName)) {
+            tasks.get(taskName).cancel(true);
+            addTask(taskName, schedule);
+        }
+    }
+
+    public void removeTask(String taskName) {
+        log.info("Task {} is deleted", taskName);
+        if (tasks.containsKey(taskName)) {
+            tasks.get(taskName).cancel(true);
+            tasks.remove(taskName);
+        }
     }
 
     public boolean isScheduledTask(String taskName) {
         return tasks.containsKey(taskName);
+    }
+
+    public long getActiveScheduleCount() {
+        var taskCount = taskScheduler.getScheduledThreadPoolExecutor().getTaskCount();
+        var completedTaskCount = taskScheduler.getScheduledThreadPoolExecutor().getCompletedTaskCount();
+        return taskCount - completedTaskCount;
     }
 
 }
