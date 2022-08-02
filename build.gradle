@@ -1,11 +1,12 @@
 plugins {
 	id 'org.springframework.boot' version '2.6.7'
 	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+    id 'com.google.cloud.tools.jib' version '3.2.1'
 	id 'java'
 }
 
 group = 'com.kubernetes'
-version = '0.0.1-SNAPSHOT'
+version = '1.0.0'
 sourceCompatibility = '17'
 
 configurations {
@@ -41,4 +42,14 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+jib {
+    from {
+        image = "eclipse-temurin:17-jre"
+    }
+    to {
+        image = "tree9295/traffic-maker"
+        tags = ["1.0.0"]
+    }
 }
